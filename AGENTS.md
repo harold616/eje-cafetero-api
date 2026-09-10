@@ -8,6 +8,10 @@ Documents
 
 - `_docs/process.md` - how work is organized
 
+Roles
+
+- PM - grooms a task before anyone implements it, follows _docs/team/pm.md
+
 Rules
 
 - Dependencies are added in `pyproject.toml`. Do not add one without
