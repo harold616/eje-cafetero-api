@@ -1,5 +1,11 @@
 # Coffee Project MVP — Eje Cafetero Visual Journey
 
+## Current build phase
+
+This MVP is being built **backend-first**. The initial deliverable is a data pipeline (ETL) and an API that model coffees from the Eje Cafetero and, critically, the causal relationships between origin, environment, variety, processing, roasting, brewing, and flavor — not just flat facts about each coffee.
+
+The visual/interactive web experience described throughout this document remains the product vision, but it is deferred to a later phase, where it will be built as a separate frontend that consumes this API.
+
 ## Product concept
 
 An immersive visual experience where people explore coffees from Colombia's Eje Cafetero and discover the chain of factors that make each coffee taste different.
@@ -71,21 +77,25 @@ Prioritize:
 
 The visual layer is not decoration; it is the primary mechanism for learning.
 
+Technical approach and tech stack are documented separately in [`architecture.md`](./architecture.md).
+
 ## MVP scope
 
-### Include
+### Phase 1 (current focus): Data + API
 
-- A curated collection of coffees from the Eje Cafetero
-- A visual coffee detail / journey experience
-- Origin and regional context
-- Environment and altitude context
-- Coffee variety information
-- Processing information
-- Roasting context
-- Brewing context
-- Flavor and sensory characteristics
-- Visual connections between these factors
+- A curated dataset of coffees from the Eje Cafetero
+- Structured data for origin and regional context, environment and altitude, variety, processing, roasting, brewing, and flavor/sensory characteristics
+- An ETL pipeline that ingests and validates curated source data into a normalized database
+- An API exposing coffees and the causal relationships between factors (e.g., altitude → cherry development → processing choices → flavor)
+
+### Phase 2 (later): Visual web experience
+
+- A visual coffee detail / journey experience, built as a frontend consuming the Phase 1 API
 - Guided storytelling with interactive exploration
+- Visual connections between factors, illustrations, motion and transitions
+- Guided journey + free exploration navigation model
+
+(See "Visual journey," "Navigation model," and "Visual direction" above — these describe the product vision for this later phase.)
 
 ### Explicitly exclude from MVP
 
