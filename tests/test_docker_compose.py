@@ -31,3 +31,20 @@ def test_env_is_gitignored_but_env_example_is_not():
     gitignore_lines = (REPO_ROOT / ".gitignore").read_text().splitlines()
     assert ".env" in gitignore_lines
     assert ".env.example" not in gitignore_lines
+
+
+def test_readme_connectivity_check_does_not_require_local_psql_client():
+    readme = (REPO_ROOT / "README.md").read_text()
+    # The connectivity check must run psql inside the compose-managed
+    # container (requires only Docker Compose), not shell out to a psql
+    # binary expected to be installed on the host.
+    assert "docker compose exec postgres" in readme
+    for var in ("POSTGRES_USER", "POSTGRES_DB"):
+        assert var in readme
+
+
+def test_readme_documents_start_stop_and_connectivity_check():
+    readme = (REPO_ROOT / "README.md").read_text()
+    assert "docker compose up -d" in readme
+    assert "docker compose down" in readme
+    assert "psql" in readme

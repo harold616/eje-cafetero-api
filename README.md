@@ -28,11 +28,10 @@ A local, persistent PostgreSQL instance runs via Docker Compose.
    docker compose up -d
    ```
 
-3. Confirm connectivity (uses the env vars from `.env`):
+3. Confirm connectivity (runs `psql` inside the running container, so no local `psql` client is required — it uses the same `POSTGRES_USER`/`POSTGRES_DB` values from `.env` that the container was started with):
 
    ```sh
-   set -a; source .env; set +a
-   PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\conninfo'
+   docker compose exec postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\conninfo"'
    ```
 
 4. Stop Postgres (data persists in a named volume):
