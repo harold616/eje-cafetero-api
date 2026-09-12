@@ -11,34 +11,3 @@ This phase also doubles as a DataOps skill-building project: orchestration, data
 ## Stack
 
 Python · Dagster · PostgreSQL · FastAPI · Pydantic v2 · SQLAlchemy 2.0 + Alembic · uv · pytest · GitHub Actions
-
-## Local development
-
-A local, persistent PostgreSQL instance runs via Docker Compose.
-
-1. Copy `.env.example` to `.env` and adjust values if needed:
-
-   ```sh
-   cp .env.example .env
-   ```
-
-2. Start Postgres:
-
-   ```sh
-   docker compose up -d
-   ```
-
-3. Confirm connectivity (uses the env vars from `.env`):
-
-   ```sh
-   set -a; source .env; set +a
-   PGPASSWORD="$POSTGRES_PASSWORD" psql -h localhost -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c '\conninfo'
-   ```
-
-4. Stop Postgres (data persists in a named volume):
-
-   ```sh
-   docker compose down
-   ```
-
-   To also wipe the data volume: `docker compose down -v`.
