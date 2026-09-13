@@ -27,6 +27,12 @@ and flavor — as one nested response shaped by `models.CoffeeChain` (also
 adapted from #4's `models.Coffee`; see that class's docstring). It reuses
 #11's `get_session` dependency and its `404`-for-missing-id pattern.
 `causal_links` stays out of scope, tracked separately in #13.
+
+`GET /coffees/{id}/causal-links` (#13) returns that coffee's causal links —
+`from_factor`, `to_factor`, `explanation` — shaped by `models.CausalLink`,
+sorted into "sensible order": the order the links occur along the factor
+chain (`models.FACTOR_CHAIN_ORDER`), not insertion order or DB id order.
+Same `404`-for-missing-id pattern as #11/#12.
 """
 
 from __future__ import annotations
@@ -42,7 +48,9 @@ from sqlalchemy.orm import Session
 
 from eje_cafetero_api.db import get_database_url
 from eje_cafetero_api.models import (
+    FACTOR_CHAIN_ORDER,
     Brewing,
+    CausalLink,
     CoffeeChain,
     CoffeeSummary,
     Environment,
@@ -53,6 +61,12 @@ from eje_cafetero_api.models import (
     Variety,
 )
 from eje_cafetero_api.orm_models import Coffee
+
+# Position of each factor name in the chain, for sorting causal links by
+# where their `from_factor` occurs. Built once from `models.FACTOR_CHAIN_ORDER`
+# (the single source of truth for chain order) rather than duplicating the
+# sequence here.
+_FACTOR_CHAIN_INDEX = {factor: index for index, factor in enumerate(FACTOR_CHAIN_ORDER)}
 
 app = FastAPI(title="Eje Cafetero API")
 
@@ -160,3 +174,34 @@ def get_coffee_chain(
         brewing=Brewing.model_validate(row.brew_method),
         flavor=Flavor.model_validate(row.flavor_profile),
     )
+
+
+@app.get("/coffees/{coffee_id}/causal-links", response_model=list[CausalLink])
+def get_coffee_causal_links(
+    coffee_id: str, session: Session = Depends(get_session)
+) -> list[CausalLink]:
+    """Return a coffee's causal links in factor-chain order, or `404`.
+
+    Same missing-id handling as `get_coffee`/`get_coffee_chain` above
+    (#11/#12): a `None` from `session.get` becomes an explicit `404`.
+
+    "Sensible order" is defined (per #13) as the order links occur along the
+    factor chain — `models.FACTOR_CHAIN_ORDER` — keyed on each link's
+    `from_factor`, not the order rows happen to come back from the database
+    (insertion/id order). `row.causal_links` is sorted explicitly here via
+    `_FACTOR_CHAIN_INDEX` rather than relied upon to already be in that
+    order; `sorted` is stable, so multiple links sharing the same
+    `from_factor` keep their relative (query) order among themselves, since
+    the issue only defines an ordering across chain steps, not within one.
+
+    A coffee with zero causal links returns `200` with `[]`, not an error —
+    #9's asset check flags that as a data-quality issue but does not block
+    the row from being written, so it's a real, reachable state here.
+    """
+    row = session.get(Coffee, coffee_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="coffee not found")
+    ordered_links = sorted(
+        row.causal_links, key=lambda link: _FACTOR_CHAIN_INDEX[link.from_factor]
+    )
+    return [CausalLink.model_validate(link) for link in ordered_links]

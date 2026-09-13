@@ -36,6 +36,23 @@ FactorName = Literal[
     "origin", "environment", "variety", "processing", "roasting", "brewing", "flavor"
 ]
 
+# The canonical order factors occur along the coffee's cause-and-effect
+# chain: origin -> environment -> variety -> processing -> roasting ->
+# brewing -> flavor. This is *not* the same thing as `FactorName`'s
+# declaration order coincidentally matching it — this tuple is the single
+# source of truth `app.py`'s `GET /coffees/{id}/causal-links` (#13) sorts
+# against, keyed on each link's `from_factor`, so "sensible order" for that
+# endpoint means this sequence, never insertion order or DB id order.
+FACTOR_CHAIN_ORDER: tuple[FactorName, ...] = (
+    "origin",
+    "environment",
+    "variety",
+    "processing",
+    "roasting",
+    "brewing",
+    "flavor",
+)
+
 
 class Origin(BaseModel):
     """Where the coffee was grown.
@@ -142,9 +159,15 @@ class Flavor(BaseModel):
 
 
 class CausalLink(BaseModel):
-    """One cause-and-effect relationship between two factor sections."""
+    """One cause-and-effect relationship between two factor sections.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` (alongside YAML-dict validation via `extra`) lets
+    this same class also validate directly off an `orm_models.CausalLink`
+    row — see `GET /coffees/{id}/causal-links` (#13) in `app.py`, which
+    reuses it that way rather than defining an ORM-only duplicate schema.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     from_factor: FactorName
     to_factor: FactorName

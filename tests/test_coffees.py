@@ -304,3 +304,100 @@ def test_get_coffee_chain_returns_404_for_nonexistent_id(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] is not None
+
+
+def _build_coffee_with_causal_links(
+    coffee_id: str, causal_links: list[models.CausalLink]
+) -> models.Coffee:
+    """`_build_coffee` fixture but with a caller-supplied `causal_links` list."""
+    coffee = _build_coffee(coffee_id, "Coffee With Links", "Has causal links.")
+    return coffee.model_copy(update={"causal_links": causal_links})
+
+
+def test_get_coffee_causal_links_returns_links_in_factor_chain_order(
+    client, db_session
+):
+    """#13: links must come back in factor-chain order (origin ->
+    environment -> variety -> processing -> roasting -> brewing -> flavor),
+    keyed on each link's `from_factor` -- not insertion order or DB id
+    order.
+
+    Seeded deliberately *out* of chain order: `roasting` (chain position 4)
+    is inserted first, `origin` (position 0) second, `variety` (position 2)
+    third. `upsert_coffee`/`_replace_causal_links` inserts rows in list
+    order, so the autoincrement `causal_links.id` order -- and therefore any
+    plain `row.causal_links`/insertion-order passthrough -- would come back
+    as [roasting, origin, variety]. Only an implementation that actually
+    sorts by chain position produces the expected [origin, variety,
+    roasting].
+    """
+    coffee = _build_coffee_with_causal_links(
+        "coffee-links-out-of-order",
+        causal_links=[
+            models.CausalLink(
+                from_factor="roasting",
+                to_factor="brewing",
+                explanation="Roast development time affects extraction during brewing.",
+            ),
+            models.CausalLink(
+                from_factor="origin",
+                to_factor="environment",
+                explanation="Farm elevation determines the growing environment's climate.",
+            ),
+            models.CausalLink(
+                from_factor="variety",
+                to_factor="processing",
+                explanation="Caturra's thinner skin suits washed processing.",
+            ),
+        ],
+    )
+    upsert_coffee(db_session, coffee)
+    db_session.flush()
+
+    response = client.get("/coffees/coffee-links-out-of-order/causal-links")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert [link["from_factor"] for link in body] == ["origin", "variety", "roasting"]
+    assert body == [
+        {
+            "from_factor": "origin",
+            "to_factor": "environment",
+            "explanation": "Farm elevation determines the growing environment's climate.",
+        },
+        {
+            "from_factor": "variety",
+            "to_factor": "processing",
+            "explanation": "Caturra's thinner skin suits washed processing.",
+        },
+        {
+            "from_factor": "roasting",
+            "to_factor": "brewing",
+            "explanation": "Roast development time affects extraction during brewing.",
+        },
+    ]
+
+
+def test_get_coffee_causal_links_returns_404_for_nonexistent_id(client):
+    response = client.get("/coffees/does-not-exist/causal-links")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] is not None
+
+
+def test_get_coffee_causal_links_returns_empty_list_for_coffee_without_links(
+    client, db_session
+):
+    """A coffee with zero causal links is a real, reachable state (#9's
+    asset check flags it as a data-quality issue but doesn't block the row
+    from being written), so this must be `200` with `[]`, not an error."""
+    upsert_coffee(
+        db_session,
+        _build_coffee("coffee-no-links", "No Links Coffee", "No causal links."),
+    )
+    db_session.flush()
+
+    response = client.get("/coffees/coffee-no-links/causal-links")
+
+    assert response.status_code == 200
+    assert response.json() == []
