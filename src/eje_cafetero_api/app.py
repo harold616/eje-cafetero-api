@@ -20,6 +20,13 @@ docstring for what's included/excluded and why). The full factor-chain
 response and causal links are out of scope for #11 — see #12/#13. Auto-
 generated docs are FastAPI's default `/docs`, unconfigured, per the issue's
 "out of scope" list.
+
+`GET /coffees/{id}/chain` (#12) returns a coffee's full origin-to-flavor
+factor chain — origin, environment, variety, processing, roasting, brewing,
+and flavor — as one nested response shaped by `models.CoffeeChain` (also
+adapted from #4's `models.Coffee`; see that class's docstring). It reuses
+#11's `get_session` dependency and its `404`-for-missing-id pattern.
+`causal_links` stays out of scope, tracked separately in #13.
 """
 
 from __future__ import annotations
@@ -34,7 +41,17 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session
 
 from eje_cafetero_api.db import get_database_url
-from eje_cafetero_api.models import CoffeeSummary
+from eje_cafetero_api.models import (
+    Brewing,
+    CoffeeChain,
+    CoffeeSummary,
+    Environment,
+    Flavor,
+    Origin,
+    Processing,
+    Roasting,
+    Variety,
+)
 from eje_cafetero_api.orm_models import Coffee
 
 app = FastAPI(title="Eje Cafetero API")
@@ -108,3 +125,38 @@ def get_coffee(
     if row is None:
         raise HTTPException(status_code=404, detail="coffee not found")
     return CoffeeSummary.model_validate(row)
+
+
+@app.get("/coffees/{coffee_id}/chain", response_model=CoffeeChain)
+def get_coffee_chain(
+    coffee_id: str, session: Session = Depends(get_session)
+) -> CoffeeChain:
+    """Return a coffee's full origin-to-flavor factor chain, or `404`.
+
+    Same missing-id handling as `get_coffee` above (#11): a `None` from
+    `session.get` becomes an explicit `404` rather than a `200` with nulls
+    or an unhandled exception from a `None.origin` attribute access.
+
+    Each of the seven one-per-coffee relationships on the row is validated
+    into its corresponding `models` section individually — rather than one
+    `CoffeeChain.model_validate(row)` call — because `orm_models.Coffee`'s
+    relationship attribute names (`processing_method`, `roast_profile`,
+    `brew_method`, `flavor_profile`) don't match this schema's section
+    names (`processing`, `roasting`, `brewing`, `flavor`); see
+    `models.CoffeeChain`'s docstring.
+    """
+    row = session.get(Coffee, coffee_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="coffee not found")
+    return CoffeeChain(
+        id=row.id,
+        name=row.name,
+        summary=row.summary,
+        origin=Origin.model_validate(row.origin),
+        environment=Environment.model_validate(row.environment),
+        variety=Variety.model_validate(row.variety),
+        processing=Processing.model_validate(row.processing_method),
+        roasting=Roasting.model_validate(row.roast_profile),
+        brewing=Brewing.model_validate(row.brew_method),
+        flavor=Flavor.model_validate(row.flavor_profile),
+    )

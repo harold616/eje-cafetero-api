@@ -93,6 +93,66 @@ def _build_coffee(coffee_id: str, name: str, summary: str) -> models.Coffee:
     )
 
 
+def _build_full_coffee(coffee_id: str) -> models.Coffee:
+    """A `models.Coffee` fixture with every optional field filled in too.
+
+    Mirrors `tests/fixtures/valid_coffee.yaml` (#3/#4's reference example)
+    field-for-field, so the #12 chain-endpoint tests below exercise a
+    genuinely fully-seeded coffee, not just the minimal `_build_coffee`
+    fixture above.
+    """
+    return models.Coffee(
+        id=coffee_id,
+        name="Finca El Ocaso Washed Caturra",
+        summary="A washed Caturra from Finca El Ocaso, Salento, Quindío.",
+        origin=models.Origin(
+            department="Quindío",
+            municipality="Salento",
+            farm_name="Finca El Ocaso",
+            producer="Familia Rosillo",
+            latitude=4.6389,
+            longitude=-75.5747,
+        ),
+        environment=models.Environment(
+            altitude_meters=1850,
+            shade_type="partial_shade",
+            avg_temperature_celsius=19.5,
+            annual_rainfall_mm=2100,
+        ),
+        variety=models.Variety(
+            species="arabica", cultivar="Caturra", rootstock="own-rooted"
+        ),
+        processing=models.Processing(
+            method="washed", fermentation_hours=18.0, drying_method="raised_beds"
+        ),
+        roasting=models.Roasting(
+            roast_level="medium",
+            development_time_percent=22.0,
+            roaster_notes="Roasted to first crack plus a short development.",
+        ),
+        brewing=models.Brewing(
+            recommended_methods=["pour_over", "aeropress"],
+            water_temperature_celsius=94.0,
+            grind_size="medium",
+            ratio="1:16",
+        ),
+        flavor=models.Flavor(
+            tasting_notes=["jasmine", "red apple", "brown sugar", "citrus"],
+            acidity="high",
+            body="medium",
+            sweetness="medium",
+            aftertaste="Clean, lingering citrus and floral finish.",
+        ),
+        causal_links=[
+            models.CausalLink(
+                from_factor="origin",
+                to_factor="environment",
+                explanation="Salento's location gives the farm high elevation.",
+            )
+        ],
+    )
+
+
 def test_list_coffees_returns_multiple_seeded_entries(client, db_session):
     upsert_coffee(db_session, _build_coffee("coffee-one", "Coffee One", "First summary."))
     upsert_coffee(db_session, _build_coffee("coffee-two", "Coffee Two", "Second summary."))
@@ -169,6 +229,78 @@ def test_get_coffee_returns_existing_coffee(client, db_session):
 
 def test_get_coffee_returns_404_for_nonexistent_id(client):
     response = client.get("/coffees/does-not-exist")
+
+    assert response.status_code == 404
+    assert response.json()["detail"] is not None
+
+
+def test_get_coffee_chain_returns_all_seven_sections_for_a_full_coffee(
+    client, db_session
+):
+    """#12: `GET /coffees/{id}/chain` on a fully-seeded coffee returns all
+    seven factor sections, each asserted individually (not just "non-empty"),
+    with representative fields from each."""
+    upsert_coffee(db_session, _build_full_coffee("coffee-full-chain"))
+    db_session.flush()
+
+    response = client.get("/coffees/coffee-full-chain/chain")
+
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["id"] == "coffee-full-chain"
+    assert body["name"] == "Finca El Ocaso Washed Caturra"
+
+    assert body["origin"] == {
+        "department": "Quindío",
+        "municipality": "Salento",
+        "farm_name": "Finca El Ocaso",
+        "producer": "Familia Rosillo",
+        "latitude": 4.6389,
+        "longitude": -75.5747,
+    }
+    assert body["environment"] == {
+        "altitude_meters": 1850,
+        "shade_type": "partial_shade",
+        "avg_temperature_celsius": 19.5,
+        "annual_rainfall_mm": 2100,
+    }
+    assert body["variety"] == {
+        "species": "arabica",
+        "cultivar": "Caturra",
+        "rootstock": "own-rooted",
+    }
+    assert body["processing"] == {
+        "method": "washed",
+        "fermentation_hours": 18.0,
+        "drying_method": "raised_beds",
+    }
+    assert body["roasting"] == {
+        "roast_level": "medium",
+        "development_time_percent": 22.0,
+        "roaster_notes": "Roasted to first crack plus a short development.",
+    }
+    assert body["brewing"] == {
+        "recommended_methods": ["pour_over", "aeropress"],
+        "water_temperature_celsius": 94.0,
+        "grind_size": "medium",
+        "ratio": "1:16",
+    }
+    assert body["flavor"] == {
+        "tasting_notes": ["jasmine", "red apple", "brown sugar", "citrus"],
+        "acidity": "high",
+        "body": "medium",
+        "sweetness": "medium",
+        "aftertaste": "Clean, lingering citrus and floral finish.",
+    }
+
+    # causal_links is explicitly out of scope for this endpoint (tracked in
+    # #13), so it must not appear in the response at all.
+    assert "causal_links" not in body
+
+
+def test_get_coffee_chain_returns_404_for_nonexistent_id(client):
+    response = client.get("/coffees/does-not-exist/chain")
 
     assert response.status_code == 404
     assert response.json()["detail"] is not None

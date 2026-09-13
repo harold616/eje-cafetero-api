@@ -38,9 +38,14 @@ FactorName = Literal[
 
 
 class Origin(BaseModel):
-    """Where the coffee was grown."""
+    """Where the coffee was grown.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` (alongside YAML-dict validation via `extra`)
+    lets this same class also validate directly off an `orm_models.Origin`
+    row — see `CoffeeChain` (#12), which reuses it that way.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     department: Department
     municipality: str
@@ -51,9 +56,12 @@ class Origin(BaseModel):
 
 
 class Environment(BaseModel):
-    """Growing-environment conditions."""
+    """Growing-environment conditions.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     altitude_meters: int
     shade_type: ShadeType
@@ -62,9 +70,12 @@ class Environment(BaseModel):
 
 
 class Variety(BaseModel):
-    """Botanical variety/cultivar of the coffee plant."""
+    """Botanical variety/cultivar of the coffee plant.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     species: Species
     cultivar: str
@@ -72,9 +83,13 @@ class Variety(BaseModel):
 
 
 class Processing(BaseModel):
-    """Post-harvest processing method."""
+    """Post-harvest processing method.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` lets this validate directly off an
+    `orm_models.ProcessingMethod` row — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     method: ProcessingMethod
     fermentation_hours: float | None = None
@@ -82,9 +97,13 @@ class Processing(BaseModel):
 
 
 class Roasting(BaseModel):
-    """Roast profile applied to the green beans."""
+    """Roast profile applied to the green beans.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` lets this validate directly off an
+    `orm_models.RoastProfile` row — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     roast_level: RoastLevel
     development_time_percent: float | None = None
@@ -92,9 +111,13 @@ class Roasting(BaseModel):
 
 
 class Brewing(BaseModel):
-    """Recommended brewing parameters."""
+    """Recommended brewing parameters.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` lets this validate directly off an
+    `orm_models.BrewMethod` row — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     recommended_methods: list[BrewMethod] = Field(min_length=1)
     water_temperature_celsius: float | None = None
@@ -103,9 +126,13 @@ class Brewing(BaseModel):
 
 
 class Flavor(BaseModel):
-    """Sensory/tasting profile of the brewed coffee."""
+    """Sensory/tasting profile of the brewed coffee.
 
-    model_config = ConfigDict(extra="forbid")
+    `from_attributes=True` lets this validate directly off an
+    `orm_models.FlavorProfile` row — see `Origin`'s docstring above.
+    """
+
+    model_config = ConfigDict(extra="forbid", from_attributes=True)
 
     tasting_notes: list[str] = Field(min_length=1)
     acidity: AcidityLevel
@@ -165,3 +192,39 @@ class CoffeeSummary(BaseModel):
     id: str
     name: str
     summary: str
+
+
+class CoffeeChain(BaseModel):
+    """API response shape for `GET /coffees/{id}/chain` (#12).
+
+    Adapted from `Coffee` above, minus `causal_links`: that section is out
+    of scope for this endpoint and tracked separately in #13. The seven
+    nested sections reuse the exact same `Origin`/`Environment`/`Variety`/
+    `Processing`/`Roasting`/`Brewing`/`Flavor` classes `Coffee` uses for
+    YAML validation — each of those now also sets `from_attributes=True` so
+    they can validate directly off an `orm_models` row instead of a dict,
+    with no ORM-only duplicate schema needed.
+
+    `from_attributes=True` on this class itself lets `id`/`name`/`summary`
+    be read straight off the root `orm_models.Coffee` row. The seven
+    sections are *not* filled in by a single top-level
+    `CoffeeChain.model_validate(row)`, though: `orm_models.Coffee`'s
+    relationship attribute names (`processing_method`, `roast_profile`,
+    `brew_method`, `flavor_profile`) don't match this schema's field names
+    (`processing`, `roasting`, `brewing`, `flavor`), so `app.py` validates
+    each section individually off its corresponding relationship and passes
+    the results in by keyword.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    summary: str
+    origin: Origin
+    environment: Environment
+    variety: Variety
+    processing: Processing
+    roasting: Roasting
+    brewing: Brewing
+    flavor: Flavor
