@@ -11,11 +11,14 @@ dependencies = [
     "pyyaml>=6.0,<7",
     "dagster>=1.13,<1.14",
     "dagster-webserver>=1.13,<1.14",
+    "fastapi>=0.141,<0.142",
+    "uvicorn[standard]>=0.52,<0.53",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=9,<10",
+    "httpx>=0.28,<0.29",
 ]
 
 [tool.pytest.ini_options]
