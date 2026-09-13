@@ -1,0 +1,7 @@
+# Invalid: not valid YAML at all. The quoted scalar on the `name` line is
+# never closed, so PyYAML's scanner fails before any mapping/validation
+# logic ever runs.
+
+id: finca-el-ocaso-caturra-washed
+name: "Finca El Ocaso Washed Caturra
+summary: A washed Caturra from Finca El Ocaso, a specialty farm in Salento.
