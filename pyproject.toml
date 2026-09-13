@@ -5,6 +5,9 @@ description = "ETL pipeline and API modeling coffees from Colombia's Eje Cafeter
 requires-python = ">=3.13"
 dependencies = [
     "pydantic>=2.13,<3",
+    "sqlalchemy>=2.0.52,<2.1",
+    "alembic>=1.19,<1.20",
+    "psycopg[binary]>=3,<4",
 ]
 
 [dependency-groups]
