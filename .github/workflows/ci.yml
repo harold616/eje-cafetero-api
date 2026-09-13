@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # Postgres 18 to match the docker-compose stack from #2/#5, not
+    # whatever GitHub Actions' Postgres action defaults to.
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: eje_cafetero
+          POSTGRES_PASSWORD: changeme
+          POSTGRES_DB: eje_cafetero
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Same POSTGRES_* vars `eje_cafetero_api.db.get_database_url()` and
+    # docker-compose read (see .env.example), pointed at the service
+    # container above rather than left to its localhost/eje_cafetero
+    # defaults, so a future default change can't silently drift from CI.
+    env:
+      POSTGRES_USER: eje_cafetero
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: eje_cafetero
+      POSTGRES_PORT: 5432
+      POSTGRES_HOST: localhost
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+
+      - name: Install Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Lint
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+
+      - name: Run database migrations
+        run: uv run alembic upgrade head
+
+      - name: Run tests
+        run: uv run pytest
