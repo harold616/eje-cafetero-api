@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import dagster as dg
 
+from eje_cafetero_api.asset_checks import all_asset_checks
 from eje_cafetero_api.assets import DatabaseResource, all_assets
 
 defs = dg.Definitions(
     assets=all_assets,
+    asset_checks=all_asset_checks,
     resources={"database": DatabaseResource()},
 )
 
