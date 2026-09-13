@@ -13,7 +13,7 @@ This phase is also being used deliberately as a **DataOps skill-building project
 
 ### Orchestration
 
-- **Dagster**, chosen over Airflow/Prefect specifically because its asset-centric model matches the data: each coffee's factor chain (origin, environment, variety, processing, roasting, brewing, flavor) is modeled as a **software-defined asset**, with the `causal_links` between them as asset dependencies. This gives lineage and freshness checks out of the box, rather than bolting them on.
+- **Dagster** (`1.13.x`), chosen over Airflow/Prefect specifically because its asset-centric model matches the data: each coffee's factor chain (origin, environment, variety, processing, roasting, brewing, flavor) is modeled as a **software-defined asset**, with the `causal_links` between them as asset dependencies. This gives lineage and freshness checks out of the box, rather than bolting them on.
 - The ETL steps (parse YAML → validate → load to Postgres) become Dagster ops/assets instead of a single linear script, so each stage is independently observable, retryable, and testable.
 - Local dev via `dagster dev` (webserver + daemon), same Docker Compose stack as the API/DB.
 

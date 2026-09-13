@@ -41,3 +41,22 @@ A local, persistent PostgreSQL instance runs via Docker Compose.
    ```
 
    To also wipe the data volume: `docker compose down -v`.
+
+## Dagster
+
+The ETL pipeline (parse/validate YAML, then load to Postgres) is wrapped as Dagster software-defined assets: one per factor in the causal chain (origin, environment, variety, processing, roasting, brewing, flavor) plus one for the coffee itself, with dependency edges mirroring the factor chain. See `src/eje_cafetero_api/assets.py` for the assets and `src/eje_cafetero_api/definitions.py` for the `Definitions` object.
+
+`dagster dev` discovers the entry point automatically via the `[tool.dagster]` `module_name` setting in `pyproject.toml` — no `-f`/`-m` flag needed. With the local Postgres from above running (and `alembic upgrade head` applied):
+
+```sh
+uv run dagster dev
+```
+
+Then open the UI (defaults to <http://localhost:3000>) to see the asset graph, and materialize it. By default the `coffee` asset reads `data/coffees/example.yaml`; override the source file via run config:
+
+```yaml
+ops:
+  coffee:
+    config:
+      path: data/coffees/some-other-coffee.yaml
+```
