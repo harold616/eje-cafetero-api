@@ -88,9 +88,9 @@ def altitude_is_plausible(coffee: models.Coffee) -> dg.AssetCheckResult:
 all_asset_checks = [has_causal_links, altitude_is_plausible]
 
 __all__ = [
-    "MIN_PLAUSIBLE_ALTITUDE_METERS",
     "MAX_PLAUSIBLE_ALTITUDE_METERS",
-    "has_causal_links",
-    "altitude_is_plausible",
+    "MIN_PLAUSIBLE_ALTITUDE_METERS",
     "all_asset_checks",
+    "altitude_is_plausible",
+    "has_causal_links",
 ]

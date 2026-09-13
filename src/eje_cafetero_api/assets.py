@@ -24,9 +24,9 @@ raises `CoffeeYamlError` or `pydantic.ValidationError`, which propagates out
 of the `coffee` asset and fails the Dagster run - never a silent no-op.
 """
 
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
 
 import dagster as dg
 from sqlalchemy import create_engine
@@ -46,15 +46,15 @@ DEFAULT_SOURCE_PATH = "data/coffees/example.yaml"
 __all__ = [
     "CoffeeSourceConfig",
     "DatabaseResource",
+    "all_assets",
+    "brewing",
     "coffee",
-    "origin",
     "environment",
-    "variety",
+    "flavor",
+    "origin",
     "processing",
     "roasting",
-    "brewing",
-    "flavor",
-    "all_assets",
+    "variety",
 ]
 
 
@@ -148,4 +148,13 @@ def flavor(coffee: models.Coffee, brewing: models.Brewing) -> models.Flavor:
     return coffee.flavor
 
 
-all_assets = [coffee, origin, environment, variety, processing, roasting, brewing, flavor]
+all_assets = [
+    coffee,
+    origin,
+    environment,
+    variety,
+    processing,
+    roasting,
+    brewing,
+    flavor,
+]

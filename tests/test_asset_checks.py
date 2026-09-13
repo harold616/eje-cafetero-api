@@ -48,7 +48,10 @@ COFFEE_ID = "finca-el-ocaso-caturra-washed"
 
 def test_both_checks_are_registered_against_the_coffee_asset():
     specs = [spec for check in all_asset_checks for spec in check.check_specs]
-    assert {spec.name for spec in specs} == {"has_causal_links", "altitude_is_plausible"}
+    assert {spec.name for spec in specs} == {
+        "has_causal_links",
+        "altitude_is_plausible",
+    }
     for spec in specs:
         assert spec.asset_key.to_user_string() == "coffee"
 

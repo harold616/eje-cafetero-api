@@ -240,9 +240,5 @@ def test_a_coffee_can_have_many_causal_links(db_session):
     )
     db_session.flush()
 
-    count = (
-        db_session.query(CausalLink)
-        .filter_by(coffee_id="test-many-links")
-        .count()
-    )
+    count = db_session.query(CausalLink).filter_by(coffee_id="test-many-links").count()
     assert count == 3

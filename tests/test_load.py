@@ -81,8 +81,12 @@ def _build_coffee(
         origin=models.Origin(
             department=department, municipality="Salento", farm_name="Finca Test"
         ),
-        environment=models.Environment(altitude_meters=1800, shade_type="partial_shade"),
-        variety=models.Variety(species="arabica", cultivar="Caturra", rootstock="own-rooted"),
+        environment=models.Environment(
+            altitude_meters=1800, shade_type="partial_shade"
+        ),
+        variety=models.Variety(
+            species="arabica", cultivar="Caturra", rootstock="own-rooted"
+        ),
         processing=models.Processing(method="washed"),
         roasting=models.Roasting(roast_level="medium"),
         brewing=models.Brewing(recommended_methods=["pour_over", "aeropress"]),
@@ -110,7 +114,9 @@ def _row_counts(session, coffee_id: str) -> dict[str, int]:
             select(func.count()).select_from(model).where(model.coffee_id == coffee_id)
         )
     counts["causal_links"] = session.scalar(
-        select(func.count()).select_from(CausalLink).where(CausalLink.coffee_id == coffee_id)
+        select(func.count())
+        .select_from(CausalLink)
+        .where(CausalLink.coffee_id == coffee_id)
     )
     return counts
 

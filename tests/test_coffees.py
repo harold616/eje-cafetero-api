@@ -27,13 +27,15 @@ from eje_cafetero_api.load import upsert_coffee
 from eje_cafetero_api.orm_models import (
     BrewMethod,
     CausalLink,
-    Coffee as CoffeeRow,
     Environment,
     FlavorProfile,
     Origin,
     ProcessingMethod,
     RoastProfile,
     Variety,
+)
+from eje_cafetero_api.orm_models import (
+    Coffee as CoffeeRow,
 )
 
 
@@ -81,8 +83,12 @@ def _build_coffee(coffee_id: str, name: str, summary: str) -> models.Coffee:
         origin=models.Origin(
             department="Quindío", municipality="Salento", farm_name="Finca Test"
         ),
-        environment=models.Environment(altitude_meters=1800, shade_type="partial_shade"),
-        variety=models.Variety(species="arabica", cultivar="Caturra", rootstock="own-rooted"),
+        environment=models.Environment(
+            altitude_meters=1800, shade_type="partial_shade"
+        ),
+        variety=models.Variety(
+            species="arabica", cultivar="Caturra", rootstock="own-rooted"
+        ),
         processing=models.Processing(method="washed"),
         roasting=models.Roasting(roast_level="medium"),
         brewing=models.Brewing(recommended_methods=["pour_over"]),
@@ -154,8 +160,12 @@ def _build_full_coffee(coffee_id: str) -> models.Coffee:
 
 
 def test_list_coffees_returns_multiple_seeded_entries(client, db_session):
-    upsert_coffee(db_session, _build_coffee("coffee-one", "Coffee One", "First summary."))
-    upsert_coffee(db_session, _build_coffee("coffee-two", "Coffee Two", "Second summary."))
+    upsert_coffee(
+        db_session, _build_coffee("coffee-one", "Coffee One", "First summary.")
+    )
+    upsert_coffee(
+        db_session, _build_coffee("coffee-two", "Coffee Two", "Second summary.")
+    )
     db_session.flush()
 
     response = client.get("/coffees")

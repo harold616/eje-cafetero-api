@@ -37,8 +37,8 @@ Same `404`-for-missing-id pattern as #11/#12.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from functools import lru_cache
-from typing import Iterator
 
 from fastapi import Depends, FastAPI, HTTPException, Response
 from sqlalchemy import create_engine, select, text

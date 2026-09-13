@@ -41,24 +41,24 @@ class Coffee(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
 
-    origin: Mapped["Origin"] = relationship(back_populates="coffee", uselist=False)
-    environment: Mapped["Environment"] = relationship(
+    origin: Mapped[Origin] = relationship(back_populates="coffee", uselist=False)
+    environment: Mapped[Environment] = relationship(
         back_populates="coffee", uselist=False
     )
-    variety: Mapped["Variety"] = relationship(back_populates="coffee", uselist=False)
-    processing_method: Mapped["ProcessingMethod"] = relationship(
+    variety: Mapped[Variety] = relationship(back_populates="coffee", uselist=False)
+    processing_method: Mapped[ProcessingMethod] = relationship(
         back_populates="coffee", uselist=False
     )
-    roast_profile: Mapped["RoastProfile"] = relationship(
+    roast_profile: Mapped[RoastProfile] = relationship(
         back_populates="coffee", uselist=False
     )
-    brew_method: Mapped["BrewMethod"] = relationship(
+    brew_method: Mapped[BrewMethod] = relationship(
         back_populates="coffee", uselist=False
     )
-    flavor_profile: Mapped["FlavorProfile"] = relationship(
+    flavor_profile: Mapped[FlavorProfile] = relationship(
         back_populates="coffee", uselist=False
     )
-    causal_links: Mapped[list["CausalLink"]] = relationship(back_populates="coffee")
+    causal_links: Mapped[list[CausalLink]] = relationship(back_populates="coffee")
 
 
 class Origin(Base):
@@ -77,7 +77,7 @@ class Origin(Base):
     latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
     longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="origin")
+    coffee: Mapped[Coffee] = relationship(back_populates="origin")
 
 
 class Environment(Base):
@@ -91,12 +91,10 @@ class Environment(Base):
     )
     altitude_meters: Mapped[int] = mapped_column(Integer, nullable=False)
     shade_type: Mapped[str] = mapped_column(String, nullable=False)
-    avg_temperature_celsius: Mapped[float | None] = mapped_column(
-        Float, nullable=True
-    )
+    avg_temperature_celsius: Mapped[float | None] = mapped_column(Float, nullable=True)
     annual_rainfall_mm: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="environment")
+    coffee: Mapped[Coffee] = relationship(back_populates="environment")
 
 
 class Variety(Base):
@@ -112,7 +110,7 @@ class Variety(Base):
     cultivar: Mapped[str] = mapped_column(String, nullable=False)
     rootstock: Mapped[str] = mapped_column(String, nullable=False)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="variety")
+    coffee: Mapped[Coffee] = relationship(back_populates="variety")
 
 
 class ProcessingMethod(Base):
@@ -128,7 +126,7 @@ class ProcessingMethod(Base):
     fermentation_hours: Mapped[float | None] = mapped_column(Float, nullable=True)
     drying_method: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="processing_method")
+    coffee: Mapped[Coffee] = relationship(back_populates="processing_method")
 
 
 class RoastProfile(Base):
@@ -141,12 +139,10 @@ class RoastProfile(Base):
         ForeignKey("coffees.id"), nullable=False, unique=True
     )
     roast_level: Mapped[str] = mapped_column(String, nullable=False)
-    development_time_percent: Mapped[float | None] = mapped_column(
-        Float, nullable=True
-    )
+    development_time_percent: Mapped[float | None] = mapped_column(Float, nullable=True)
     roaster_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="roast_profile")
+    coffee: Mapped[Coffee] = relationship(back_populates="roast_profile")
 
 
 class BrewMethod(Base):
@@ -167,7 +163,7 @@ class BrewMethod(Base):
     grind_size: Mapped[str | None] = mapped_column(String, nullable=True)
     ratio: Mapped[str | None] = mapped_column(String, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="brew_method")
+    coffee: Mapped[Coffee] = relationship(back_populates="brew_method")
 
 
 class FlavorProfile(Base):
@@ -185,7 +181,7 @@ class FlavorProfile(Base):
     sweetness: Mapped[str] = mapped_column(String, nullable=False)
     aftertaste: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="flavor_profile")
+    coffee: Mapped[Coffee] = relationship(back_populates="flavor_profile")
 
 
 class CausalLink(Base):
@@ -203,4 +199,4 @@ class CausalLink(Base):
     to_factor: Mapped[str] = mapped_column(String, nullable=False)
     explanation: Mapped[str] = mapped_column(Text, nullable=False)
 
-    coffee: Mapped["Coffee"] = relationship(back_populates="causal_links")
+    coffee: Mapped[Coffee] = relationship(back_populates="causal_links")
