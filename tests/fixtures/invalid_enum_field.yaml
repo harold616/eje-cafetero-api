@@ -1,0 +1,56 @@
+# Invalid: `roasting.roast_level` is set to a value outside the fixed set
+# documented in _docs/schema.md (light, medium, medium-dark, dark).
+
+id: finca-el-ocaso-caturra-washed
+name: "Finca El Ocaso Washed Caturra"
+summary: >
+  A washed Caturra from Finca El Ocaso, a well-known specialty and
+  agritourism farm in Salento, Quindío.
+
+origin:
+  department: "Quindío"
+  municipality: "Salento"
+  farm_name: "Finca El Ocaso"
+  producer: "Familia Rosillo"
+  latitude: 4.6389
+  longitude: -75.5747
+
+environment:
+  altitude_meters: 1850
+  shade_type: partial_shade
+  avg_temperature_celsius: 19.5
+  annual_rainfall_mm: 2100
+
+variety:
+  species: arabica
+  cultivar: "Caturra"
+  rootstock: own-rooted
+
+processing:
+  method: washed
+  fermentation_hours: 18
+  drying_method: raised_beds
+
+roasting:
+  roast_level: extra-dark
+  development_time_percent: 22.0
+  roaster_notes: "Medium roast, short development."
+
+brewing:
+  recommended_methods:
+    - pour_over
+    - aeropress
+  water_temperature_celsius: 94.0
+  grind_size: medium
+  ratio: "1:16"
+
+flavor:
+  tasting_notes:
+    - jasmine
+    - red apple
+  acidity: high
+  body: medium
+  sweetness: medium
+  aftertaste: "Clean, lingering citrus finish."
+
+causal_links: []

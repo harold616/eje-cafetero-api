@@ -1,0 +1,103 @@
+# Reference example for the schema documented in _docs/schema.md.
+# Every field in that doc is set here to a real (non-placeholder) value,
+# including optional fields, so the doc and this file agree field-for-field.
+
+id: finca-el-ocaso-caturra-washed
+name: "Finca El Ocaso Washed Caturra"
+summary: >
+  A washed Caturra from Finca El Ocaso, a well-known specialty and
+  agritourism farm in Salento, Quindío, in the foothills near the Cocora
+  Valley. Grown at high altitude on volcanic Andean soil, it produces a
+  bright, floral cup with high acidity and a clean, citrus-forward finish.
+
+origin:
+  department: "Quindío"
+  municipality: "Salento"
+  farm_name: "Finca El Ocaso"
+  producer: "Familia Rosillo"
+  latitude: 4.6389
+  longitude: -75.5747
+
+environment:
+  altitude_meters: 1850
+  shade_type: partial_shade
+  avg_temperature_celsius: 19.5
+  annual_rainfall_mm: 2100
+
+variety:
+  species: arabica
+  cultivar: "Caturra"
+  rootstock: own-rooted
+
+processing:
+  method: washed
+  fermentation_hours: 18
+  drying_method: raised_beds
+
+roasting:
+  roast_level: medium
+  development_time_percent: 22.0
+  roaster_notes: >
+    Roasted to first crack plus a short development to preserve bright
+    acidity and floral aromatics; medium color, no visible surface oil.
+
+brewing:
+  recommended_methods:
+    - pour_over
+    - aeropress
+  water_temperature_celsius: 94.0
+  grind_size: medium
+  ratio: "1:16"
+
+flavor:
+  tasting_notes:
+    - jasmine
+    - red apple
+    - brown sugar
+    - citrus
+  acidity: high
+  body: medium
+  sweetness: medium
+  aftertaste: >
+    Clean, lingering citrus and floral finish with a light black-tea-like
+    dryness.
+
+causal_links:
+  - from_factor: origin
+    to_factor: environment
+    explanation: >
+      Salento's location in the Central Andes foothills near the Cocora
+      Valley gives the farm consistently high elevation and volcanic
+      soils, which define the environmental conditions below.
+  - from_factor: environment
+    to_factor: variety
+    explanation: >
+      High altitude (1850 masl) and cooler average temperatures slow
+      cherry maturation, letting the Caturra trees develop denser sugars
+      and more complex acidity before harvest.
+  - from_factor: variety
+    to_factor: processing
+    explanation: >
+      Caturra's thinner cherry skin and moderate sugar content make it
+      well suited to a fully washed process, which removes mucilage
+      quickly and produces a cleaner cup than natural processing would
+      on this variety.
+  - from_factor: processing
+    to_factor: roasting
+    explanation: >
+      The washed process yields a lower-density, brighter green bean, so
+      the roaster keeps it at a medium roast to preserve acidity and
+      floral notes rather than roasting darker, which would mute them.
+  - from_factor: roasting
+    to_factor: brewing
+    explanation: >
+      The medium roast's retained acidity and delicate aromatics are
+      best extracted with pour-over or AeroPress, which offer more
+      control over extraction than immersion or espresso brewing for
+      lighter roasts.
+  - from_factor: brewing
+    to_factor: flavor
+    explanation: >
+      Brewing at 94C with a medium grind and a 1:16 ratio fully extracts
+      the floral and citrus notes without over-extracting into
+      bitterness, producing the jasmine and red-apple cup profile.

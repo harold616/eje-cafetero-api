@@ -3,11 +3,14 @@ name = "eje-cafetero-api"
 version = "0.1.0"
 description = "ETL pipeline and API modeling coffees from Colombia's Eje Cafetero and the causal chain behind their flavor."
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "pydantic>=2.13,<3",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=9,<10",
+    "pyyaml>=6.0,<7",
 ]
 
 [tool.pytest.ini_options]
