@@ -13,21 +13,29 @@ Run it under Uvicorn:
 
     uv run uvicorn eje_cafetero_api.app:app --reload
 
-Everything beyond `/health` (the `/coffees` endpoints, etc.) is out of
-scope for this task — see #11/#12/#13. Auto-generated docs are FastAPI's
-default `/docs`, unconfigured, per the issue's "out of scope" list.
+`GET /coffees` and `GET /coffees/{id}` (#11) are also defined here: a list
+and a single-record endpoint over the `coffees` table, both shaped by
+`models.CoffeeSummary` (adapted from #4's `models.Coffee` — see that class's
+docstring for what's included/excluded and why). The full factor-chain
+response and causal links are out of scope for #11 — see #12/#13. Auto-
+generated docs are FastAPI's default `/docs`, unconfigured, per the issue's
+"out of scope" list.
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import Iterator
 
-from fastapi import Depends, FastAPI, Response
-from sqlalchemy import create_engine, text
+from fastapi import Depends, FastAPI, HTTPException, Response
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
 from eje_cafetero_api.db import get_database_url
+from eje_cafetero_api.models import CoffeeSummary
+from eje_cafetero_api.orm_models import Coffee
 
 app = FastAPI(title="Eje Cafetero API")
 
@@ -59,3 +67,44 @@ def health(response: Response, engine: Engine = Depends(get_engine)) -> dict:
         response.status_code = 503
         return {"status": "error", "detail": "database unreachable"}
     return {"status": "ok"}
+
+
+def get_session(engine: Engine = Depends(get_engine)) -> Iterator[Session]:
+    """Yield a `Session` bound to the process-wide engine.
+
+    A dependency (rather than a bare `with Session(engine) as ...` inline in
+    each endpoint) so tests can override it directly — e.g. binding the
+    yielded `Session` to a test's own connection/transaction instead of a
+    fresh one, the same `app.dependency_overrides` mechanism `get_engine`
+    already uses for `/health`.
+    """
+    with Session(engine) as session:
+        yield session
+
+
+@app.get("/coffees", response_model=list[CoffeeSummary])
+def list_coffees(session: Session = Depends(get_session)) -> list[CoffeeSummary]:
+    """Return every coffee currently in the database.
+
+    `200` with an empty list on an empty database — not an error — since an
+    empty `coffees` table is a valid (if uninteresting) state, not a failure.
+    """
+    rows = session.execute(select(Coffee)).scalars().all()
+    return [CoffeeSummary.model_validate(row) for row in rows]
+
+
+@app.get("/coffees/{coffee_id}", response_model=CoffeeSummary)
+def get_coffee(
+    coffee_id: str, session: Session = Depends(get_session)
+) -> CoffeeSummary:
+    """Return a single coffee by its `id`, or `404` if it doesn't exist.
+
+    `session.get` returns `None` for a missing primary key rather than
+    raising; that `None` is turned into an explicit `404` here so a bad id
+    never comes back as a `200` with `null` or falls through to an
+    unhandled-exception `500`.
+    """
+    row = session.get(Coffee, coffee_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="coffee not found")
+    return CoffeeSummary.model_validate(row)

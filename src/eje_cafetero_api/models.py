@@ -140,3 +140,28 @@ class Coffee(BaseModel):
     brewing: Brewing
     flavor: Flavor
     causal_links: list[CausalLink]
+
+
+class CoffeeSummary(BaseModel):
+    """API response shape for `GET /coffees` and `GET /coffees/{id}` (#11).
+
+    Adapted from `Coffee` above rather than redefined from scratch: `id`,
+    `name`, and `summary` are exactly the fields `orm_models.Coffee` stores
+    on the `coffees` table itself (see `_docs/schema.md`). The rest of
+    `Coffee`'s fields — the full factor chain (`origin` through `flavor`)
+    and `causal_links` — are intentionally left out of this response, not an
+    oversight: assembling that chain is out of scope for #11 and tracked
+    separately (#12 for `/coffees/{id}/chain`, #13 for causal links). There
+    is no internal-only field to hide here — `orm_models.Coffee.id` is the
+    schema's own kebab-case business key (see `load.py`), not a surrogate DB
+    primary key, so it is exposed as-is.
+
+    `from_attributes=True` lets this be built directly off an
+    `orm_models.Coffee` row via `CoffeeSummary.model_validate(row)`.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    name: str
+    summary: str
